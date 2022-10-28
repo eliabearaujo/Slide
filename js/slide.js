@@ -98,9 +98,51 @@ export default class Slide {
     this.onEnd = this.onEnd.bind(this);
   }
 
+  // Slides config
+
+  slidePosition(slide) {
+    const margin = (this.wrapper.offsetWidth - slide.offsetWidth) / 2;
+    //Retorna a posição do slide ja descontando a margin, assim, o slide ficara centralizado.
+    return -(slide.offsetLeft - margin);
+  }
+  // Método para pegar as configurações das imagens, afim de deixar no meio da tela.
+  slidesConfig() {
+    // Desestrutura o nodelist slide, e salva os filhos (lis) num array.
+    // Esse array é modificado pelo map, que nos retorna um array de objetos
+    // Contendo a posição esquerda de cada um dos elementos.
+    this.slideArray = [...this.slide.children].map((element) => {
+      // Armazena a posição do slide, já contando a margin.
+      const position = this.slidePosition(element);
+      return {};
+    });
+  }
+
+  // Movimenta o slide para o slide do index informado.
+  changeSlide(index) {
+    const activeSlide = this.slideArray[index];
+    this.moveSlide(activeSlide.position);
+    this.slideIndexNav(index);
+    this.dist.finalPosition = activeSlide.position;
+  }
+
+  // Armazena a informação do slide atual, anterior e proximo.
+  slideIndexNav(index) {
+    // Para que não tenhamos slide -1 ou mais slides do que existe, medimos o ultimo.
+    const last = this.slideArray.length;
+    this.index = {
+      // Verifica se o index é diferente de 0 (true), caso sim o slide anterior será index -1
+      // Caso seja false (0), será undefined
+      prev: index ? index - 1 : undefined,
+      active: index,
+      //Verificamos se o slide é igual ao ultimo, caso seja o proximo será undefined.
+      // Caso não, será index do atual + 1
+      next: index === last ? undefined : this.index + 1,
+    };
+  }
   init() {
     this.bindEvents();
     this.addSlideEvents();
+    this.slidesConfig();
     return this;
   }
 }
