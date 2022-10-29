@@ -6,6 +6,11 @@ export class Slide {
     // 6 - Objeto contendo as distancias do slide
     this.dist = { finalPosition: 0, startX: 0, movement: 0 };
     this.activeClass = 'active';
+    // Podemos criar eventos.
+    // Assim como existem os eventos de click, esse será um novo evento.
+    // Esse evento será ativado quando chamarmos o StatEvent
+    // Toda vez que mudar o slide (ver changeSlide), ativar o evento.
+    this.changeEvent = new Event('changeEvent');
   }
 
   // Aplica um efeito de transição nos slides.
@@ -150,6 +155,9 @@ export class Slide {
     this.slidesIndexNav(index);
     this.dist.finalPosition = activeSlide.position;
     this.changeActiveClass();
+    // Emite o evento criado.
+    // Assim podemos ficar observando esse evento e tomar ações quando ele mudar.
+    this.wrapper.dispatchEvent(this.changeEvent);
   }
 
   // 20 - Remove a classe ativo de todos os itens do array, e depois adiciona no atual
@@ -210,6 +218,10 @@ export class Slide {
 // Extentendo a classe Slide para que a classe SlideNav tenha acesso aos seus métodos e propriedades
 // Não precisa criar um construtor caso o construtor seja o mesmo.
 export class SlideNav extends Slide {
+  constructor(slide, wrapper) {
+    super(slide, wrapper);
+    this.bindControlEvents();
+  }
   // 22 - Faz a seleção dos botões
   addArrow(prev, next) {
     this.prevElement = document.querySelector(prev);
@@ -220,5 +232,56 @@ export class SlideNav extends Slide {
   addArrowEvent() {
     this.prevElement.addEventListener('click', this.activePrevSlide);
     this.nextElement.addEventListener('click', this.activeNextSlide);
+  }
+
+  createControl() {
+    // Uma ul, com data-control = 'slide'
+    const control = document.createElement('ul');
+    control.dataset.control = 'slide';
+    // Adiciona dentro de cada ul, um li, com um link
+    // O href desse link será op Slide+index do slide.
+    this.slideArray.forEach((item, index) => {
+      // O +1 no index, é apenas para visualizações.
+      // Caso o usuario veja, o index não começa no zero.
+      control.innerHTML += `<li><a href="#slide${index + 1}">${
+        index + 1
+      }</a></li>`;
+    });
+    this.wrapper.appendChild(control);
+    return control;
+  }
+
+  eventControl(item, index) {
+    item.addEventListener('click', (event) => {
+      event.preventDefault();
+      this.changeSlide(index);
+    });
+    // Toda vez que mudar um slide, o evento será ativo.
+    this.wrapper.addEventListener('changeEvent', this.activeControlItem);
+  }
+
+  activeControlItem() {
+    this.controlArray.forEach((item) =>
+      item.classList.remove(this.activeClass)
+    );
+    this.controlArray[this.index.active].classList.add(this.activeClass);
+  }
+
+  addControl(customControl) {
+    this.control =
+      document.querySelector(customControl) || this.createControl();
+    // Tranformou o control em um array de lis
+    this.controlArray = [...this.control.children];
+    // Para cada item do array, chamamos a função eventControl.
+    // Essa funçao adiciona o evento de click e muda o slide.
+    this.activeControlItem();
+    this.controlArray.forEach(this.eventControl);
+  }
+
+  bindControlEvents() {
+    // Fazemos o bind aqui, pois esse é o callback da função.
+    // Caso não fizessemos, o this seria referente aos items (lis) do eventControl.
+    this.eventControl = this.eventControl.bind(this);
+    this.activeControlItem = this.activeControlItem.bind(this);
   }
 }
