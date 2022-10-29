@@ -1,5 +1,5 @@
-import Slide from './slide.js';
-
-const slide = new Slide('.slide', '.slider-wrapper');
+import { Slide, SlideNav } from './slide.js';
+// Como estou extendendo a classe Slide, preciso usar a classe nova abaixo.
+const slide = new SlideNav('.slide', '.slider-wrapper');
 slide.init();
-slide.changeSlide(3);
+slide.addArrow('.prev', '.next');

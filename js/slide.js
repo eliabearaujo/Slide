@@ -1,5 +1,5 @@
 import debounce from './debounce.js';
-export default class Slide {
+export class Slide {
   constructor(slide, wrapper) {
     this.slide = document.querySelector(slide);
     this.wrapper = document.querySelector(wrapper);
@@ -120,6 +120,8 @@ export default class Slide {
     this.onMove = this.onMove.bind(this);
     this.onEnd = this.onEnd.bind(this);
     this.onRisize = debounce(this.onRisize.bind(this), 200);
+    this.activePrevSlide = this.activePrevSlide.bind(this);
+    this.activeNextSlide = this.activeNextSlide.bind(this);
   }
 
   // 9 - Slides config
@@ -200,6 +202,23 @@ export default class Slide {
     this.addSlideEvents();
     this.slidesConfig();
     this.addResizeEvent();
+    this.changeSlide(0);
     return this;
+  }
+}
+
+// Extentendo a classe Slide para que a classe SlideNav tenha acesso aos seus métodos e propriedades
+// Não precisa criar um construtor caso o construtor seja o mesmo.
+export class SlideNav extends Slide {
+  // 22 - Faz a seleção dos botões
+  addArrow(prev, next) {
+    this.prevElement = document.querySelector(prev);
+    this.nextElement = document.querySelector(next);
+    this.addArrowEvent();
+  }
+
+  addArrowEvent() {
+    this.prevElement.addEventListener('click', this.activePrevSlide);
+    this.nextElement.addEventListener('click', this.activeNextSlide);
   }
 }
