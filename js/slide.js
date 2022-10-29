@@ -6,6 +6,12 @@ export default class Slide {
     this.dist = { finalPosition: 0, startX: 0, movement: 0 };
   }
 
+  // Aplica um efeito de transição nos slides.
+  // Para que o efeito seja feito apenas quando realizarmos a transição, criamos o método
+  // Pois sem ele, o efeito aconteceria a cada movimentação de 1px
+  transition(active) {
+    this.slide.style.transition = active ? 'transform .3s' : '';
+  }
   // 8 - Atualiza a posição de x do transform do slide.
   moveSlide(distX) {
     // Salvamos no constructor o valor já movimentado pelo mouse
@@ -52,6 +58,7 @@ export default class Slide {
     // Fica fora do ifelse pois recebe o parametro do tipo de movimento desse check.
     // Assim não precisamos adionar a linha abaixo no ifelse
     this.wrapper.addEventListener(movetype, this.onMove);
+    this.transition(false);
   }
 
   // 4 - Dados do evento de movimentação do mouse enquanto clicado.
@@ -76,6 +83,20 @@ export default class Slide {
     // Informarmos para o finalPosition a ultima posição no eixo x do mouse quando tiramos ele de cima.
     // E atualizamos no objeto.
     this.dist.finalPosition = this.dist.movePosition;
+    // Tem que estar acima do changeSlideOnEnd, senão o efeito só será adicionado
+    // quando a mudança já tiver ocorrido.
+    this.transition(true);
+    this.changeSlideOnEnd();
+  }
+
+  changeSlideOnEnd() {
+    if (this.dist.movement > 120 && this.index.next !== undefined) {
+      this.activeNextSlide();
+    } else if (this.dist.movement < -120 && this.index.prev !== undefined) {
+      this.activePrevSlide();
+    } else {
+      this.changeSlide(this.index.active);
+    }
   }
 
   // 2 - Adiciona o evento de mousedown ao wrapper, e inicia a função onStart após clique.
@@ -98,14 +119,14 @@ export default class Slide {
     this.onEnd = this.onEnd.bind(this);
   }
 
-  // Slides config
+  // 9 - Slides config
 
   slidePosition(slide) {
     const margin = (this.wrapper.offsetWidth - slide.offsetWidth) / 2;
     //Retorna a posição do slide ja descontando a margin, assim, o slide ficara centralizado.
     return -(slide.offsetLeft - margin);
   }
-  // Método para pegar as configurações das imagens, afim de deixar no meio da tela.
+  // 10 - Método para pegar as configurações das imagens, afim de deixar no meio da tela.
   slidesConfig() {
     // Desestrutura o nodelist slide, e salva os filhos (lis) num array.
     // Esse array é modificado pelo map, que nos retorna um array de objetos
@@ -113,22 +134,22 @@ export default class Slide {
     this.slideArray = [...this.slide.children].map((element) => {
       // Armazena a posição do slide, já contando a margin.
       const position = this.slidePosition(element);
-      return {};
+      return { position, element };
     });
   }
 
-  // Movimenta o slide para o slide do index informado.
+  // 11 - Movimenta o slide para o slide do index informado.
   changeSlide(index) {
     const activeSlide = this.slideArray[index];
     this.moveSlide(activeSlide.position);
-    this.slideIndexNav(index);
+    this.slidesIndexNav(index);
     this.dist.finalPosition = activeSlide.position;
   }
 
   // Armazena a informação do slide atual, anterior e proximo.
-  slideIndexNav(index) {
+  slidesIndexNav(index) {
     // Para que não tenhamos slide -1 ou mais slides do que existe, medimos o ultimo.
-    const last = this.slideArray.length;
+    const last = this.slideArray.length - 1;
     this.index = {
       // Verifica se o index é diferente de 0 (true), caso sim o slide anterior será index -1
       // Caso seja false (0), será undefined
@@ -136,11 +157,21 @@ export default class Slide {
       active: index,
       //Verificamos se o slide é igual ao ultimo, caso seja o proximo será undefined.
       // Caso não, será index do atual + 1
-      next: index === last ? undefined : this.index + 1,
+      next: index === last ? undefined : index + 1,
     };
   }
+  // Movimenta para o slide anterior
+  activePrevSlide() {
+    if (this.index.prev !== undefined) this.changeSlide(this.index.prev);
+  }
+
+  activeNextSlide() {
+    if (this.index.next !== undefined) this.changeSlide(this.index.next);
+  }
+
   init() {
     this.bindEvents();
+    this.transition(true);
     this.addSlideEvents();
     this.slidesConfig();
     return this;
