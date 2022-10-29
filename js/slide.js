@@ -217,7 +217,7 @@ export class Slide {
 
 // Extentendo a classe Slide para que a classe SlideNav tenha acesso aos seus métodos e propriedades
 // Não precisa criar um construtor caso o construtor seja o mesmo.
-export class SlideNav extends Slide {
+export default class SlideNav extends Slide {
   constructor(slide, wrapper) {
     super(slide, wrapper);
     this.bindControlEvents();
